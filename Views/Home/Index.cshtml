@@ -1,0 +1,23 @@
+@model List<KhalawanyTube.Models.MediaClip>
+
+<h1>Family Local Network Tube</h1>
+<p>Share family-friendly videos and audio on your local network.</p>
+
+@foreach (var clip in Model)
+{
+    <div class="card">
+        <h3>@clip.Title</h3>
+        <p>@clip.Description</p>
+        <small>By @clip.Owner?.DisplayName on @clip.CreatedAtUtc.ToLocalTime()</small>
+        <div>
+            @if (clip.MediaType == "video")
+            {
+                <video src="@clip.FilePath" controls width="420"></video>
+            }
+            else
+            {
+                <audio src="@clip.FilePath" controls></audio>
+            }
+        </div>
+    </div>
+}
