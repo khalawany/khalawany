@@ -1,0 +1,15 @@
+@{
+    var recent = (List<KhalawanyTube.Models.MediaClip>)ViewBag.RecentClips;
+}
+
+<h2>Administrator Dashboard</h2>
+<p>Total users: @ViewBag.UsersCount</p>
+<p>Total media clips: @ViewBag.ClipsCount</p>
+
+<h3>Recent uploads</h3>
+@foreach (var clip in recent)
+{
+    <div class="card">
+        <strong>@clip.Title</strong> by @clip.Owner?.DisplayName (@clip.MediaType)
+    </div>
+}

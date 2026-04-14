@@ -1,0 +1,20 @@
+@model List<KhalawanyTube.Models.MediaClip>
+
+<h2>My Clips</h2>
+
+@foreach (var clip in Model)
+{
+    <div class="card">
+        <strong>@clip.Title</strong> - @clip.MediaType
+        <div>
+            @if (clip.MediaType == "video")
+            {
+                <video src="@clip.FilePath" controls width="320"></video>
+            }
+            else
+            {
+                <audio src="@clip.FilePath" controls></audio>
+            }
+        </div>
+    </div>
+}
