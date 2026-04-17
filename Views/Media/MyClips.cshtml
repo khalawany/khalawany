@@ -1,0 +1,32 @@
+@model List<KhalawanyTube.Models.MediaClip>
+
+<h2>My Clips</h2>
+
+@foreach (var clip in Model)
+{
+    <div class="card">
+        <strong>@clip.Title</strong> - @clip.MediaType
+        <div><small>Status: @(clip.IsShared ? "Shared" : "Private")</small></div>
+
+        <div>
+            @if (clip.MediaType == "video")
+            {
+                <video src="@clip.FilePath" controls width="320"></video>
+            }
+            else
+            {
+                <audio src="@clip.FilePath" controls></audio>
+            }
+        </div>
+
+        <div>
+            <a asp-action="Edit" asp-route-id="@clip.Id">Edit</a>
+            <form asp-action="ToggleShare" asp-route-id="@clip.Id" method="post" style="display:inline">
+                <button type="submit">@(clip.IsShared ? "Make Private" : "Share")</button>
+            </form>
+            <form asp-action="Delete" asp-route-id="@clip.Id" method="post" style="display:inline" onsubmit="return confirm('Delete this clip?');">
+                <button type="submit">Delete</button>
+            </form>
+        </div>
+    </div>
+}
