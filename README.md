@@ -55,3 +55,17 @@ Admin is seeded from config (`appsettings.json`):
 ## Data storage
 - SQLite file: `familytube.db`
 - Upload folder: `wwwroot/uploads`
+
+
+## Database migration script
+If your existing `familytube.db` was created before the `IsShared` field existed, run:
+
+```bash
+sqlite3 familytube.db ".read db/migrations/2026-04-17_add_is_shared.sql"
+```
+
+Rollback script (if needed):
+
+```bash
+sqlite3 familytube.db ".read db/migrations/2026-04-17_add_is_shared_rollback.sql"
+```
