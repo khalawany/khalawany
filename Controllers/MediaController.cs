@@ -28,6 +28,7 @@ public class MediaController : Controller
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync();
 
+        var clips = await _db.MediaClips.Where(x => x.OwnerId == userId).OrderByDescending(x => x.CreatedAtUtc).ToListAsync();
         return View(clips);
     }
 

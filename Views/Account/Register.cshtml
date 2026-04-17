@@ -11,3 +11,13 @@
         <button type="submit">Create Account</button>
     </form>
 </div>
+<h2>Register</h2>
+<form method="post">
+    <div asp-validation-summary="All"></div>
+    <label asp-for="DisplayName"></label><input asp-for="DisplayName" />
+    <label asp-for="Email"></label><input asp-for="Email" />
+    <label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" type="date" />
+    <label asp-for="Password"></label><input asp-for="Password" type="password" />
+    <label asp-for="ConfirmPassword"></label><input asp-for="ConfirmPassword" type="password" />
+    <button type="submit">Create Account</button>
+</form>

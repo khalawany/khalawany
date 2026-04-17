@@ -29,6 +29,10 @@ public class HomeController : Controller
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync();
 
+        var clips = await _db.MediaClips
+            .Include(x => x.Owner)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync();
         return View(clips);
     }
 }

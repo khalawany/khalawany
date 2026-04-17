@@ -28,6 +28,7 @@
           noiseSuppression: true,
           autoGainControl: true
         },
+        audio: true,
         video: isVideo
       });
 
@@ -51,6 +52,17 @@
         const blob = new Blob(chunks, { type: resolvedType });
         const extension = resolvedType.includes('mp4') ? 'mp4' : 'webm';
         const file = new File([blob], `recorded-${Date.now()}.${extension}`, { type: resolvedType });
+      const mimeType = isVideo ? 'video/webm' : 'audio/webm';
+      mediaRecorder = new MediaRecorder(stream, { mimeType });
+      chunks = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType });
+        const file = new File([blob], `recorded-${Date.now()}.webm`, { type: mimeType });
 
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
@@ -68,6 +80,10 @@
       status.textContent = 'Recording... (microphone is enabled)';
     } catch (err) {
       status.textContent = 'Unable to start recording. Check mic/camera permissions in browser.';
+      mediaRecorder.start();
+      status.textContent = 'Recording...';
+    } catch (err) {
+      status.textContent = 'Unable to start recording. Check browser permissions.';
     }
   });
 

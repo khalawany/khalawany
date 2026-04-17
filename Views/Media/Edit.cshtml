@@ -26,3 +26,27 @@
         <button type="submit">Save Changes</button>
     </form>
 </div>
+<h2>Edit Clip</h2>
+
+<form method="post">
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="All"></div>
+
+    <label asp-for="Title"></label>
+    <input asp-for="Title" />
+
+    <label asp-for="Description"></label>
+    <textarea asp-for="Description"></textarea>
+
+    <label asp-for="MediaType"></label>
+    <select asp-for="MediaType">
+        <option value="video">Video</option>
+        <option value="audio">Audio</option>
+    </select>
+
+    <label>
+        <input asp-for="IsShared" type="checkbox" /> Shared with family
+    </label>
+
+    <button type="submit">Save Changes</button>
+</form>
