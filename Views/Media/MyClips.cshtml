@@ -6,8 +6,6 @@
 {
     <div class="card">
         <strong>@clip.Title</strong> - @clip.MediaType
-        <div><small>Status: @(clip.IsShared ? "Shared" : "Private")</small></div>
-
         <div>
             @if (clip.MediaType == "video")
             {
@@ -17,16 +15,6 @@
             {
                 <audio src="@clip.FilePath" controls></audio>
             }
-        </div>
-
-        <div>
-            <a asp-action="Edit" asp-route-id="@clip.Id">Edit</a>
-            <form asp-action="ToggleShare" asp-route-id="@clip.Id" method="post" style="display:inline">
-                <button type="submit">@(clip.IsShared ? "Make Private" : "Share")</button>
-            </form>
-            <form asp-action="Delete" asp-route-id="@clip.Id" method="post" style="display:inline" onsubmit="return confirm('Delete this clip?');">
-                <button type="submit">Delete</button>
-            </form>
         </div>
     </div>
 }

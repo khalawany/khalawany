@@ -16,11 +16,6 @@
     <label asp-for="File">Selected/Recorded File</label>
     <input asp-for="File" id="fileInput" type="file" accept="video/*,audio/*" />
 
-    <label>
-        <input asp-for="IsShared" type="checkbox" /> Share this upload with family
-    </label>
-    <small>Unchecked = private (only you and admin can see it).</small>
-
     <div class="card">
         <h3>Record directly</h3>
         <button type="button" id="startRecord">Start Recording</button>

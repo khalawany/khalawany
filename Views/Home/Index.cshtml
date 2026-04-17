@@ -1,12 +1,7 @@
 @model List<KhalawanyTube.Models.MediaClip>
 
 <h1>Family Local Network Tube</h1>
-<p>Only shared family clips are visible here. Your private clips are visible only to you (and admin).</p>
-
-@if (!Model.Any())
-{
-    <p>No clips available yet.</p>
-}
+<p>Share family-friendly videos and audio on your local network.</p>
 
 @foreach (var clip in Model)
 {
