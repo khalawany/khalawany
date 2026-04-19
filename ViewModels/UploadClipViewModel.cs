@@ -16,8 +16,6 @@ public class UploadClipViewModel
     [RegularExpression("video|audio")]
     public string MediaType { get; set; } = "video";
 
-    public bool IsShared { get; set; }
-
     [Required]
     public IFormFile File { get; set; } = default!;
 }

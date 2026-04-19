@@ -1,18 +1,20 @@
-@using System.Text.Json
 @model List<KhalawanyTube.Models.MediaClip>
-@{
-    var data = Model.Select(clip => new
-    {
-        id = clip.Id,
-        title = clip.Title,
-        description = clip.Description,
-        mediaType = clip.MediaType,
-        filePath = clip.FilePath,
-        ownerDisplayName = "You",
-        createdAtLocal = clip.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm"),
-        isShared = clip.IsShared
-    });
-}
 
-<div id="react-myclips"></div>
-<script id="my-clips-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(data))</script>
+<h2>My Clips</h2>
+
+@foreach (var clip in Model)
+{
+    <div class="card">
+        <strong>@clip.Title</strong> - @clip.MediaType
+        <div>
+            @if (clip.MediaType == "video")
+            {
+                <video src="@clip.FilePath" controls width="320"></video>
+            }
+            else
+            {
+                <audio src="@clip.FilePath" controls></audio>
+            }
+        </div>
+    </div>
+}

@@ -5,13 +5,10 @@ A private mini YouTube-like web app built with **.NET / C# (ASP.NET Core MVC)** 
 ## Main features
 - Record and share **audio** clips.
 - Record and share **video** clips.
-- Upload visibility control: **Shared** or **Private**.
-- Edit/delete your own uploads and toggle share/private status.
 - **Site administrator** dashboard.
 - **User registration** and login.
 - **Profile and personal data management** (display name, DOB, bio).
 - Age gate set to **7+ years old**.
-- Twitter-like UI skin for cleaner social-feed styling, rendered with React components for feed pages.
 
 ## Host on local IIS (Windows)
 
@@ -56,17 +53,3 @@ Admin is seeded from config (`appsettings.json`):
 ## Data storage
 - SQLite file: `familytube.db`
 - Upload folder: `wwwroot/uploads`
-
-
-## Database migration script
-If your existing `familytube.db` was created before the `IsShared` field existed, run:
-
-```bash
-sqlite3 familytube.db ".read db/migrations/2026-04-17_add_is_shared.sql"
-```
-
-Rollback script (if needed):
-
-```bash
-sqlite3 familytube.db ".read db/migrations/2026-04-17_add_is_shared_rollback.sql"
-```

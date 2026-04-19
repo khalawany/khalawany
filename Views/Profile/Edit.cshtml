@@ -1,12 +1,10 @@
 @model KhalawanyTube.ViewModels.ProfileViewModel
 
-<div class="card">
-    <h2>Edit Profile</h2>
-    <form method="post">
-        <div asp-validation-summary="All"></div>
-        <label asp-for="DisplayName"></label><input asp-for="DisplayName" />
-        <label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" type="date" />
-        <label asp-for="Bio"></label><textarea asp-for="Bio"></textarea>
-        <button type="submit">Save Profile</button>
-    </form>
-</div>
+<h2>Edit Profile</h2>
+<form method="post">
+    <div asp-validation-summary="All"></div>
+    <label asp-for="DisplayName"></label><input asp-for="DisplayName" />
+    <label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" type="date" />
+    <label asp-for="Bio"></label><textarea asp-for="Bio"></textarea>
+    <button type="submit">Save Profile</button>
+</form>
