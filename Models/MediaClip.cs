@@ -23,6 +23,8 @@ public class MediaClip
     [Required]
     public string OwnerId { get; set; } = string.Empty;
 
+    public bool IsShared { get; set; } = false;
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public ApplicationUser? Owner { get; set; }

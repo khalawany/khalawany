@@ -1,5 +1,38 @@
 @model KhalawanyTube.ViewModels.UploadClipViewModel
 
+<div class="card">
+    <h2>Upload or Record</h2>
+    <p>You can upload existing files or record new media in-browser, then submit.</p>
+
+    <form method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="All"></div>
+        <label asp-for="Title"></label><input asp-for="Title" />
+        <label asp-for="Description"></label><textarea asp-for="Description"></textarea>
+        <label asp-for="MediaType"></label>
+        <select asp-for="MediaType" id="mediaType">
+            <option value="video">Video</option>
+            <option value="audio">Audio</option>
+        </select>
+
+        <label asp-for="File">Selected/Recorded File</label>
+        <input asp-for="File" id="fileInput" type="file" accept="video/*,audio/*" />
+
+        <label>
+            <input asp-for="IsShared" type="checkbox" /> Share this upload with family
+        </label>
+        <div class="muted-note">Unchecked = private (only you and admin can see it).</div>
+
+        <div class="card">
+            <h3>Record directly</h3>
+            <button type="button" id="startRecord">Start Recording</button>
+            <button type="button" id="stopRecord">Stop Recording</button>
+            <p id="recordStatus">Idle</p>
+            <video id="previewVideo" width="320" autoplay muted style="display:none"></video>
+        </div>
+
+        <button type="submit">Save Clip</button>
+    </form>
+</div>
 <h2>Upload or Record</h2>
 <p>You can upload existing files or record new media in-browser, then submit.</p>
 

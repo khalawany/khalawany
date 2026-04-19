@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using KhalawanyTube.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,19 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAdmin = User.IsInRole("Admin");
+
+        var query = _db.MediaClips.Include(x => x.Owner).AsQueryable();
+        if (!isAdmin)
+        {
+            query = query.Where(x => x.IsShared || (userId != null && x.OwnerId == userId));
+        }
+
+        var clips = await query
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToListAsync();
+
         var clips = await _db.MediaClips
             .Include(x => x.Owner)
             .OrderByDescending(x => x.CreatedAtUtc)

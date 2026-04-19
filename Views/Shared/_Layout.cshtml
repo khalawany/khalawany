@@ -4,6 +4,40 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>KhalawanyTube</title>
+    <link rel="stylesheet" href="~/css/twitter-skin.css" />
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" asp-controller="Home" asp-action="Index">KhalawanyTube</a>
+        <nav class="nav-links">
+            <a asp-controller="Home" asp-action="Index">Home</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Media" asp-action="Upload">Upload</a>
+                <a asp-controller="Media" asp-action="MyClips">My Clips</a>
+                <a asp-controller="Profile" asp-action="Edit">Profile</a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="Index">Admin</a>
+                }
+                <form asp-controller="Account" asp-action="Logout" method="post" class="inline-form">
+                    <button type="submit">Logout</button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Register">Register</a>
+                <a asp-controller="Account" asp-action="Login">Login</a>
+            }
+        </nav>
+    </div>
+</header>
+
+<main class="page">
+    @RenderBody()
+</main>
+
     <style>
         body { font-family: Arial, sans-serif; max-width: 960px; margin: 20px auto; padding: 0 16px; }
         nav a { margin-right: 12px; }

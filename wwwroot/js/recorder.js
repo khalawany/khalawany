@@ -11,10 +11,23 @@
   let chunks = [];
   let stream;
 
+  function getSupportedMimeType(isVideo) {
+    const candidates = isVideo
+      ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']
+      : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+
+    return candidates.find(type => MediaRecorder.isTypeSupported(type)) || '';
+  }
+
   startBtn.addEventListener('click', async () => {
     try {
       const isVideo = mediaTypeSelect?.value !== 'audio';
       stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        },
         audio: true,
         video: isVideo
       });
@@ -24,6 +37,21 @@
         previewVideo.srcObject = stream;
       }
 
+      const mimeType = getSupportedMimeType(isVideo);
+      mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      chunks = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const resolvedType = mimeType || (isVideo ? 'video/webm' : 'audio/webm');
+        const blob = new Blob(chunks, { type: resolvedType });
+        const extension = resolvedType.includes('mp4') ? 'mp4' : 'webm';
+        const file = new File([blob], `recorded-${Date.now()}.${extension}`, { type: resolvedType });
       const mimeType = isVideo ? 'video/webm' : 'audio/webm';
       mediaRecorder = new MediaRecorder(stream, { mimeType });
       chunks = [];
@@ -48,6 +76,10 @@
         if (previewVideo) previewVideo.srcObject = null;
       };
 
+      mediaRecorder.start(1000);
+      status.textContent = 'Recording... (microphone is enabled)';
+    } catch (err) {
+      status.textContent = 'Unable to start recording. Check mic/camera permissions in browser.';
       mediaRecorder.start();
       status.textContent = 'Recording...';
     } catch (err) {
