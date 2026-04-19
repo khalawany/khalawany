@@ -1,0 +1,18 @@
+@using System.Text.Json
+@model List<KhalawanyTube.Models.MediaClip>
+@{
+    var data = Model.Select(clip => new
+    {
+        id = clip.Id,
+        title = clip.Title,
+        description = clip.Description,
+        mediaType = clip.MediaType,
+        filePath = clip.FilePath,
+        ownerDisplayName = "You",
+        createdAtLocal = clip.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm"),
+        isShared = clip.IsShared
+    });
+}
+
+<div id="react-myclips"></div>
+<script id="my-clips-data" type="application/json">@Html.Raw(JsonSerializer.Serialize(data))</script>
