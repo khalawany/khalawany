@@ -1,26 +1,48 @@
 @model KhalawanyTube.ViewModels.EditClipViewModel
 
-<h2>Edit Clip</h2>
+<div class="form-wrap">
+    <div class="form-card">
+        <div class="form-logo">
+            <div class="logo-icon">✏</div>
+            <h2>Edit Clip</h2>
+            <p>Update your clip's details below.</p>
+        </div>
 
-<form method="post">
-    <input asp-for="Id" type="hidden" />
-    <div asp-validation-summary="All"></div>
+        <form method="post">
+            <input asp-for="Id" type="hidden" />
+            <div asp-validation-summary="All" class="validation-summary"></div>
 
-    <label asp-for="Title"></label>
-    <input asp-for="Title" />
+            <div class="form-group">
+                <label asp-for="Title" class="form-label">Title</label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="field-validation-error"></span>
+            </div>
 
-    <label asp-for="Description"></label>
-    <textarea asp-for="Description"></textarea>
+            <div class="form-group">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+            </div>
 
-    <label asp-for="MediaType"></label>
-    <select asp-for="MediaType">
-        <option value="video">Video</option>
-        <option value="audio">Audio</option>
-    </select>
+            <div class="form-group">
+                <label asp-for="MediaType" class="form-label">Media Type</label>
+                <select asp-for="MediaType" class="form-control">
+                    <option value="video">📹 Video</option>
+                    <option value="audio">🎵 Audio</option>
+                </select>
+            </div>
 
-    <label>
-        <input asp-for="IsShared" type="checkbox" /> Shared with family
-    </label>
+            <div class="form-group">
+                <label class="form-check">
+                    <input asp-for="IsShared" type="checkbox" />
+                    <span class="form-check-label">Share with the whole family</span>
+                </label>
+                <p class="form-hint">Shared clips are highlighted on the home feed.</p>
+            </div>
 
-    <button type="submit">Save Changes</button>
-</form>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button type="submit" class="btn btn-primary" style="flex:1;">Save Changes</button>
+                <a asp-controller="Media" asp-action="MyClips" class="btn btn-ghost" style="flex:1;text-align:center;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

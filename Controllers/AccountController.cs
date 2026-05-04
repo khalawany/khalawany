@@ -63,6 +63,14 @@ public class AccountController : Controller
             return View(model);
         }
 
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user is { IsBlocked: true })
+        {
+            await _signInManager.SignOutAsync();
+            ModelState.AddModelError(string.Empty, "Your account has been blocked by an administrator.");
+            return View(model);
+        }
+
         return RedirectToAction("Index", "Home");
     }
 

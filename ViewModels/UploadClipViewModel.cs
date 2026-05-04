@@ -18,4 +18,6 @@ public class UploadClipViewModel
 
     [Required]
     public IFormFile File { get; set; } = default!;
+
+    public bool IsShared { get; set; }
 }

@@ -17,6 +17,7 @@ public class HomeController : Controller
     {
         var clips = await _db.MediaClips
             .Include(x => x.Owner)
+            .Where(x => x.IsShared && !x.IsBlocked && !(x.Owner != null && x.Owner.IsBlocked))
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync();
         return View(clips);

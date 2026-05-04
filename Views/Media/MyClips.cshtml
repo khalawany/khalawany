@@ -1,20 +1,111 @@
 @model List<KhalawanyTube.Models.MediaClip>
 
-<h2>My Clips</h2>
-
-@foreach (var clip in Model)
-{
-    <div class="card">
-        <strong>@clip.Title</strong> - @clip.MediaType
+<div class="container">
+    <div class="section-head">
         <div>
-            @if (clip.MediaType == "video")
+            <h2 style="font-size:1.6rem;font-weight:700;">My Clips</h2>
+            <p style="color:var(--text-sec);font-size:0.875rem;margin-top:2px;">@Model.Count clip@(Model.Count == 1 ? "" : "s") uploaded by you</p>
+        </div>
+        <a asp-controller="Media" asp-action="Upload" class="btn btn-primary">+ New Clip</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🎥</div>
+            <h3>No clips yet</h3>
+            <p>Upload your first video or audio clip to get started.</p>
+            <a asp-controller="Media" asp-action="Upload" class="btn btn-primary btn-lg">Upload Now</a>
+        </div>
+    }
+    else
+    {
+        <div class="media-grid" style="padding-bottom:48px;">
+            @foreach (var clip in Model)
             {
-                <video src="@clip.FilePath" controls width="320"></video>
-            }
-            else
-            {
-                <audio src="@clip.FilePath" controls></audio>
+                <div class="media-card @(clip.IsBlocked ? "card-blocked" : "")">
+
+
+                    <div class="media-thumb">
+                        @if (clip.MediaType == "video")
+                        {
+                            <video src="@clip.FilePath" preload="metadata"></video>
+                        }
+                        else
+                        {
+                            <div class="audio-thumb">
+                                <span class="audio-thumb-icon">🎵</span>
+                            </div>
+                        }
+
+                        <div class="thumb-badges">
+                            <span class="badge badge-@clip.MediaType">@clip.MediaType</span>
+                        </div>
+                        @if (clip.IsShared && !clip.IsBlocked)
+                        {
+                            <span class="badge badge-shared thumb-badge-shared">shared</span>
+                        }
+
+                        @if (clip.IsBlocked)
+                        {
+                            <div class="blocked-overlay">
+                                <div class="blocked-overlay-icon">
+                                    <span class="blocked-overlay-text">BLOCKED</span>
+                                    <span class="blocked-overlay-sub">by administrator</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+
+                    @if (!clip.IsBlocked)
+                    {
+                        <div class="media-player">
+                            @if (clip.MediaType == "video")
+                            {
+                                <video src="@clip.FilePath" controls preload="none"></video>
+                            }
+                            else
+                            {
+                                <audio src="@clip.FilePath" controls></audio>
+                            }
+                        </div>
+                    }
+
+
+                    <div class="media-card-body @(clip.IsBlocked ? "body-faded" : "")">
+                        <div class="media-card-title" title="@clip.Title">@clip.Title</div>
+                        @if (clip.IsBlocked)
+                        {
+                            <div style="margin:4px 0 6px;">
+                                <span class="status-badge status-blocked">Blocked by admin</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(clip.Description))
+                        {
+                            <div class="media-card-desc">@clip.Description</div>
+                        }
+                        <div class="media-card-meta">
+                            <span>@clip.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy · h:mm tt")</span>
+                        </div>
+                    </div>
+
+
+                    <div class="media-card-actions">
+                        @if (!clip.IsBlocked)
+                        {
+                            <a asp-controller="Media" asp-action="Edit" asp-route-id="@clip.Id"
+                               class="btn btn-secondary btn-sm" style="flex:1;">✏ Edit</a>
+                        }
+                        <form asp-controller="Media" asp-action="Delete" asp-route-id="@clip.Id"
+                              method="post" style="flex:1;"
+                              onsubmit="return confirm('Delete «@clip.Title»? This cannot be undone.');">
+                            <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">🗑 Delete</button>
+                        </form>
+                    </div>
+
+                </div>
             }
         </div>
-    </div>
-}
+    }
+</div>

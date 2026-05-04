@@ -1,28 +1,189 @@
 @model KhalawanyTube.ViewModels.UploadClipViewModel
 
-<h2>Upload or Record</h2>
-<p>You can upload existing files or record new media in-browser, then submit.</p>
-
-<form method="post" enctype="multipart/form-data">
-    <div asp-validation-summary="All"></div>
-    <label asp-for="Title"></label><input asp-for="Title" />
-    <label asp-for="Description"></label><textarea asp-for="Description"></textarea>
-    <label asp-for="MediaType"></label>
-    <select asp-for="MediaType" id="mediaType">
-        <option value="video">Video</option>
-        <option value="audio">Audio</option>
-    </select>
-
-    <label asp-for="File">Selected/Recorded File</label>
-    <input asp-for="File" id="fileInput" type="file" accept="video/*,audio/*" />
-
-    <div class="card">
-        <h3>Record directly</h3>
-        <button type="button" id="startRecord">Start Recording</button>
-        <button type="button" id="stopRecord">Stop Recording</button>
-        <p id="recordStatus">Idle</p>
-        <video id="previewVideo" width="320" autoplay muted style="display:none"></video>
+<div class="container">
+    <div class="page-header">
+        <h1>Upload or Record</h1>
+        <p>Add a new clip to share with the family. Max file size: 200 MB.</p>
     </div>
 
-    <button type="submit">Save Clip</button>
-</form>
+    <div class="form-card form-card-wide" style="max-width:820px;margin-bottom:48px;">
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            {{-- Title & Description --}}
+            <div class="form-row">
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="Give your clip a name…" />
+                    <span asp-validation-for="Title" class="field-validation-error"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="form-label">
+                    Description <span style="color:var(--text-muted);font-weight:400">(optional)</span>
+                </label>
+                <textarea asp-for="Description" class="form-control" rows="2" placeholder="What's this clip about?"></textarea>
+            </div>
+
+            {{-- Media type + Share toggle --}}
+            <div class="form-row" style="align-items:end;margin-bottom:20px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label asp-for="MediaType" class="form-label">Media Type</label>
+                    <select asp-for="MediaType" class="form-control" id="mediaType">
+                        <option value="video">📹 Video</option>
+                        <option value="audio">🎵 Audio</option>
+                    </select>
+                </div>
+                <div class="share-toggle-card">
+                    <label class="form-check">
+                        <input asp-for="IsShared" type="checkbox" id="isSharedCheck" />
+                        <span class="form-check-label">
+                            <span class="share-toggle-title">Share with Family</span>
+                            <span class="share-toggle-hint">Visible on the Home feed</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            {{-- File zone + Record --}}
+            <div class="upload-layout">
+                <div>
+                    <p class="form-label" style="margin-bottom:8px;">Choose a File</p>
+                    <div class="upload-zone" id="uploadZone">
+                        <input asp-for="File" id="fileInput" type="file" accept="video/*,audio/*" />
+                        <div class="upload-icon" id="zoneIcon">📁</div>
+                        <div class="upload-label"><strong>Browse</strong> or drag a file here</div>
+                        <div class="upload-hint">MP4, WebM, MP3, WAV, OGG — up to 200 MB</div>
+                        <div class="upload-filename" id="chosenFile"></div>
+                    </div>
+                    <span asp-validation-for="File" class="field-validation-error"></span>
+                </div>
+
+                <div class="record-card">
+                    <h3>🎙 Record Directly</h3>
+                    <video id="previewVideo" class="record-preview" autoplay muted playsinline></video>
+                    <div class="record-controls">
+                        <button type="button" id="startRecord" class="btn btn-secondary btn-sm">⏺ Start</button>
+                        <button type="button" id="stopRecord" class="btn btn-ghost btn-sm" disabled>⏹ Stop</button>
+                    </div>
+                    <div class="record-status">
+                        <span class="rec-dot" id="recDot"></span>
+                        <span id="recordStatus">Idle — press Start to begin recording</span>
+                    </div>
+                    <p id="noRecorderMsg" class="form-hint" style="display:none;color:#f59e0b;">
+                        ⚠ Your browser doesn't support in-browser recording. Please upload a file instead.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Upload progress bar (hidden until upload starts) --}}
+            <div id="progressWrap" style="display:none;margin-top:20px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span class="form-label" style="margin:0;">Uploading…</span>
+                    <span id="progressPct" style="font-size:0.82rem;color:var(--text-sec);">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+                </div>
+                <p id="progressMsg" class="form-hint" style="margin-top:6px;"></p>
+            </div>
+
+            <div style="margin-top:24px;display:flex;gap:10px;">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg">Save Clip</button>
+                <a asp-controller="Media" asp-action="MyClips" class="btn btn-ghost btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    // ── Drag-drop & file picker ──────────────────
+    const zone       = document.getElementById('uploadZone');
+    const fileInput  = document.getElementById('fileInput');
+    const chosenFile = document.getElementById('chosenFile');
+    const zoneIcon   = document.getElementById('zoneIcon');
+
+    function formatSize(bytes) {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function setFile(file) {
+        if (!file) return;
+        chosenFile.textContent = file.name + ' — ' + formatSize(file.size);
+        zoneIcon.textContent = file.type.startsWith('video') ? '🎬' : '🎵';
+        zone.style.borderColor = 'var(--accent)';
+    }
+
+    fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const f = e.dataTransfer.files[0];
+        if (!f) return;
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        fileInput.files = dt.files;
+        setFile(f);
+    });
+
+    // ── XHR upload with progress bar ────────────
+    const form        = document.getElementById('uploadForm');
+    const submitBtn   = document.getElementById('submitBtn');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBar  = document.getElementById('progressBar');
+    const progressPct  = document.getElementById('progressPct');
+    const progressMsg  = document.getElementById('progressMsg');
+
+    form.addEventListener('submit', function (e) {
+        // Only intercept when a file is actually selected (skip plain validation fail)
+        if (!fileInput.files.length) return;
+
+        e.preventDefault();
+        const data = new FormData(form);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action || window.location.href);
+
+        // Show progress UI
+        progressWrap.style.display = 'block';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uploading…';
+
+        xhr.upload.addEventListener('progress', ev => {
+            if (!ev.lengthComputable) return;
+            const pct = Math.round((ev.loaded / ev.total) * 100);
+            progressBar.style.width = pct + '%';
+            progressPct.textContent = pct + '%';
+            if (pct === 100) {
+                progressMsg.textContent = 'Processing…';
+                progressBar.classList.add('progress-bar-pulse');
+            }
+        });
+
+        xhr.addEventListener('load', () => {
+            if (xhr.status < 400) {
+                // Server redirected after save — follow it
+                const redirect = xhr.responseURL;
+                window.location.href = redirect || '/Media/MyClips';
+            } else {
+                // Show server validation errors by replacing the page
+                document.open(); document.write(xhr.responseText); document.close();
+            }
+        });
+
+        xhr.addEventListener('error', () => {
+            progressMsg.textContent = 'Upload failed — check your connection and try again.';
+            progressMsg.style.color = '#ff4444';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Clip';
+        });
+
+        xhr.send(data);
+    });
+})();
+</script>

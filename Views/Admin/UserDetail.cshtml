@@ -1,0 +1,112 @@
+@model KhalawanyTube.ViewModels.AdminUserDetailViewModel
+
+<div class="container">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>@Model.DisplayName</h1>
+            <p>User profile &amp; uploaded clips.</p>
+        </div>
+        <a asp-action="Users" class="btn btn-secondary">← All Users</a>
+    </div>
+
+    <div class="user-profile-card">
+        <div class="user-profile-avatar">
+            @Model.DisplayName[0].ToString().ToUpper()
+        </div>
+        <div class="user-profile-info">
+            <div class="user-profile-name">
+                @Model.DisplayName
+                @if (Model.IsAdmin)   { <span class="status-badge status-admin">Admin</span> }
+                @if (Model.IsBlocked) { <span class="status-badge status-blocked">Blocked</span> }
+            </div>
+            <div class="user-profile-detail">@Model.Email</div>
+            <div class="user-profile-detail">Born @Model.DateOfBirth.ToString("MMMM d, yyyy")</div>
+            @if (!string.IsNullOrWhiteSpace(Model.Bio))
+            {
+                <div class="user-profile-bio">@Model.Bio</div>
+            }
+        </div>
+
+        @if (!Model.IsAdmin)
+        {
+            <div class="user-profile-actions">
+                <form asp-action="BlockUser" asp-route-id="@Model.Id" method="post">
+                    <input type="hidden" name="returnTo" value="Detail" />
+                    <button type="submit" class="btn @(Model.IsBlocked ? "btn-secondary" : "btn-warn")">
+                        @(Model.IsBlocked ? "✅ Unblock User" : "🚫 Block User")
+                    </button>
+                </form>
+                <form asp-action="DeleteUser" asp-route-id="@Model.Id" method="post"
+                      onsubmit="return confirm('Permanently delete @Model.DisplayName and ALL their @Model.Clips.Count clip(s)? This cannot be undone.');">
+                    <button type="submit" class="btn btn-danger">🗑 Delete User</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="section-head" style="margin-top:32px;">
+        <h2>Clips (@Model.Clips.Count)</h2>
+    </div>
+
+    @if (!Model.Clips.Any())
+    {
+        <div class="empty-state" style="padding:48px 24px;">
+            <div class="empty-icon">🎬</div>
+            <h3>No clips uploaded</h3>
+        </div>
+    }
+    else
+    {
+        <div class="table-card" style="margin-bottom:48px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var clip in Model.Clips)
+                    {
+                        <tr class="@(clip.IsBlocked ? "row-blocked" : "")">
+                            <td>
+                                @clip.Title
+                                @if (clip.IsShared) { <span class="badge badge-shared" style="margin-left:6px;">shared</span> }
+                            </td>
+                            <td><span class="badge badge-@clip.MediaType">@clip.MediaType</span></td>
+                            <td>
+                                @if (clip.IsBlocked)
+                                {
+                                    <span class="status-badge status-blocked">Blocked</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-ok">Active</span>
+                                }
+                            </td>
+                            <td>@clip.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy · h:mm tt")</td>
+                            <td>
+                                <div class="action-row" style="justify-content:flex-end;">
+                                    <form asp-action="BlockClip" asp-route-id="@clip.Id" method="post">
+                                        <input type="hidden" name="returnTo" value="Detail" />
+                                        <button type="submit" class="btn btn-sm @(clip.IsBlocked ? "btn-secondary" : "btn-warn")">
+                                            @(clip.IsBlocked ? "Unblock" : "Block")
+                                        </button>
+                                    </form>
+                                    <form asp-action="DeleteClip" asp-route-id="@clip.Id" method="post"
+                                          onsubmit="return confirm('Permanently delete «@clip.Title»?');">
+                                        <input type="hidden" name="returnTo" value="Detail" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

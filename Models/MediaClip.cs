@@ -25,5 +25,9 @@ public class MediaClip
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    public bool IsShared { get; set; }
+
+    public bool IsBlocked { get; set; }
+
     public ApplicationUser? Owner { get; set; }
 }

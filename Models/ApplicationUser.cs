@@ -14,4 +14,6 @@ public class ApplicationUser : IdentityUser
 
     [StringLength(300)]
     public string? Bio { get; set; }
+
+    public bool IsBlocked { get; set; }
 }

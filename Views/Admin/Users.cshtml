@@ -1,0 +1,94 @@
+@model List<KhalawanyTube.Models.ApplicationUser>
+@{
+    var clipCounts = (Dictionary<string, int>)ViewBag.ClipCounts;
+    var adminIds   = (HashSet<string>)ViewBag.AdminIds;
+}
+
+<div class="container">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>Family Members</h1>
+            <p>@Model.Count account@(Model.Count == 1 ? "" : "s") registered on this server.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">← Dashboard</a>
+    </div>
+
+    <div class="table-card" style="margin-bottom:48px;">
+        <div class="table-card-head">All Users</div>
+        @if (!Model.Any())
+        {
+            <div class="empty-state" style="padding:40px 24px;">
+                <div class="empty-icon" style="font-size:2rem;">👥</div>
+                <h3>No users yet</h3>
+            </div>
+        }
+        else
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Date of Birth</th>
+                        <th>Clips</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        var isAdmin = adminIds.Contains(user.Id);
+                        <tr class="@(user.IsBlocked ? "row-blocked" : "")">
+                            <td>@user.DisplayName</td>
+                            <td style="color:var(--text-sec);font-size:0.82rem;">@user.Email</td>
+                            <td style="color:var(--text-sec);">@user.DateOfBirth.ToString("MMM d, yyyy")</td>
+                            <td>@(clipCounts.GetValueOrDefault(user.Id, 0))</td>
+                            <td>
+                                @if (isAdmin)
+                                {
+                                    <span class="status-badge status-admin">Admin</span>
+                                }
+                                else
+                                {
+                                    <span style="color:var(--text-muted);font-size:0.82rem;">Member</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsBlocked)
+                                {
+                                    <span class="status-badge status-blocked">Blocked</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-ok">Active</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-row" style="justify-content:flex-end;">
+                                    <a asp-action="UserDetail" asp-route-id="@user.Id"
+                                       class="btn btn-sm btn-secondary">View</a>
+
+                                    @if (!isAdmin)
+                                    {
+                                        <form asp-action="BlockUser" asp-route-id="@user.Id" method="post">
+                                            <input type="hidden" name="returnTo" value="Users" />
+                                            <button type="submit" class="btn btn-sm @(user.IsBlocked ? "btn-secondary" : "btn-warn")">
+                                                @(user.IsBlocked ? "Unblock" : "Block")
+                                            </button>
+                                        </form>
+                                        <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post"
+                                              onsubmit="return confirm('Delete @user.DisplayName and ALL their clips? This cannot be undone.');">
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

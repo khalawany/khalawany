@@ -2,14 +2,100 @@
     var recent = (List<KhalawanyTube.Models.MediaClip>)ViewBag.RecentClips;
 }
 
-<h2>Administrator Dashboard</h2>
-<p>Total users: @ViewBag.UsersCount</p>
-<p>Total media clips: @ViewBag.ClipsCount</p>
-
-<h3>Recent uploads</h3>
-@foreach (var clip in recent)
-{
-    <div class="card">
-        <strong>@clip.Title</strong> by @clip.Owner?.DisplayName (@clip.MediaType)
+<div class="container">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>Admin Dashboard</h1>
+            <p>Overview of your family's KhalawanyTube instance.</p>
+        </div>
+        <a asp-action="Users" class="btn btn-secondary">👥 Manage Users</a>
     </div>
-}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">@ViewBag.UsersCount</div>
+            <div class="stat-label">Family Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">@ViewBag.ClipsCount</div>
+            <div class="stat-label">Total Clips</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">@(recent.Count(c => c.IsShared))</div>
+            <div class="stat-label">Shared (recent 20)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color:var(--warn);">@(recent.Count(c => c.IsBlocked))</div>
+            <div class="stat-label">Blocked (recent 20)</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-card-head">Recent Uploads</div>
+        @if (!recent.Any())
+        {
+            <div class="empty-state" style="padding:40px 24px;">
+                <div class="empty-icon" style="font-size:2rem;">📭</div>
+                <h3>No uploads yet</h3>
+            </div>
+        }
+        else
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Owner</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var clip in recent)
+                    {
+                        <tr class="@(clip.IsBlocked ? "row-blocked" : "")">
+                            <td>@clip.Title</td>
+                            <td>
+                                <a asp-action="UserDetail" asp-route-id="@clip.OwnerId"
+                                   style="color:var(--accent);">@(clip.Owner?.DisplayName ?? "—")</a>
+                            </td>
+                            <td><span class="badge badge-@clip.MediaType">@clip.MediaType</span></td>
+                            <td>
+                                @if (clip.IsBlocked)
+                                {
+                                    <span class="status-badge status-blocked">Blocked</span>
+                                }
+                                else if (clip.IsShared)
+                                {
+                                    <span class="status-badge status-shared">Shared</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-ok">Active</span>
+                                }
+                            </td>
+                            <td>@clip.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                            <td>
+                                <div class="action-row">
+                                    <form asp-action="BlockClip" asp-route-id="@clip.Id" method="post">
+                                        <input type="hidden" name="returnTo" value="Index" />
+                                        <button type="submit" class="btn btn-sm @(clip.IsBlocked ? "btn-secondary" : "btn-warn")">
+                                            @(clip.IsBlocked ? "Unblock" : "Block")
+                                        </button>
+                                    </form>
+                                    <form asp-action="DeleteClip" asp-route-id="@clip.Id" method="post"
+                                          onsubmit="return confirm('Permanently delete «@clip.Title»?');">
+                                        <input type="hidden" name="returnTo" value="Index" />
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

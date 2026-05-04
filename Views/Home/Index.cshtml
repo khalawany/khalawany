@@ -1,23 +1,77 @@
 @model List<KhalawanyTube.Models.MediaClip>
 
-<h1>Family Local Network Tube</h1>
-<p>Share family-friendly videos and audio on your local network.</p>
+<div class="container">
+    <div class="hero">
+        <h1>Your Family's <em>Private</em> Tube</h1>
+        <p>Share videos and audio with everyone at home — no internet required.</p>
+    </div>
 
-@foreach (var clip in Model)
-{
-    <div class="card">
-        <h3>@clip.Title</h3>
-        <p>@clip.Description</p>
-        <small>By @clip.Owner?.DisplayName on @clip.CreatedAtUtc.ToLocalTime()</small>
-        <div>
-            @if (clip.MediaType == "video")
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🎬</div>
+            <h3>Nothing here yet</h3>
+            <p>Be the first to share something with the family!</p>
+            @if (User.Identity?.IsAuthenticated == true)
             {
-                <video src="@clip.FilePath" controls width="420"></video>
+                <a asp-controller="Media" asp-action="Upload" class="btn btn-primary btn-lg">Upload First Clip</a>
             }
             else
             {
-                <audio src="@clip.FilePath" controls></audio>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">Join to Upload</a>
             }
         </div>
-    </div>
-}
+    }
+    else
+    {
+        <div class="media-grid">
+            @foreach (var clip in Model)
+            {
+                <div class="media-card">
+                    <div class="media-thumb">
+                        @if (clip.MediaType == "video")
+                        {
+                            <video src="@clip.FilePath" preload="metadata"></video>
+                        }
+                        else
+                        {
+                            <div class="audio-thumb">
+                                <span class="audio-thumb-icon">🎵</span>
+                            </div>
+                        }
+                        <div class="thumb-badges">
+                            <span class="badge badge-@clip.MediaType">@clip.MediaType</span>
+                        </div>
+                        @if (clip.IsShared)
+                        {
+                            <span class="badge badge-shared thumb-badge-shared">shared</span>
+                        }
+                    </div>
+
+                    <div class="media-player">
+                        @if (clip.MediaType == "video")
+                        {
+                            <video src="@clip.FilePath" controls preload="none"></video>
+                        }
+                        else
+                        {
+                            <audio src="@clip.FilePath" controls></audio>
+                        }
+                    </div>
+
+                    <div class="media-card-body">
+                        <div class="media-card-title" title="@clip.Title">@clip.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(clip.Description))
+                        {
+                            <div class="media-card-desc">@clip.Description</div>
+                        }
+                        <div class="media-card-meta">
+                            <span class="author">@(clip.Owner?.DisplayName ?? "Family")</span>
+                            <span>@clip.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

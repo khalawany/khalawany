@@ -1,9 +1,11 @@
 using KhalawanyTube.Data;
+using KhalawanyTube.Middleware;
 using KhalawanyTube.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseWindowsService();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -33,6 +35,12 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE MediaClips ADD COLUMN IsShared INTEGER NOT NULL DEFAULT 0"); }
+    catch { /* column already exists */ }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE MediaClips ADD COLUMN IsBlocked INTEGER NOT NULL DEFAULT 0"); }
+    catch { /* column already exists */ }
+    try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN IsBlocked INTEGER NOT NULL DEFAULT 0"); }
+    catch { /* column already exists */ }
 
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     if (!await roleManager.RoleExistsAsync("Admin"))
@@ -66,6 +74,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UsePathBase("/familytube");
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -80,6 +90,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<BlockedUserMiddleware>();
 app.UseAuthorization();
 
 app.MapControllerRoute(

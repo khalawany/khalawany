@@ -1,3 +1,5 @@
 bin/
 obj/
 *.db
+.vs/
+appsettings.Development.json
