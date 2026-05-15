@@ -1,0 +1,65 @@
+@model List<KhalawanyTube.Models.Comment>
+
+<div class="container">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1>Comment Moderation</h1>
+            <p>Review deletion requests from users and manage all comments.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">← Dashboard</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state" style="padding:60px 24px;">
+            <div class="empty-icon" style="font-size:2.5rem;">✅</div>
+            <h3>No pending requests</h3>
+            <p>All clear — no comments are awaiting deletion approval.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <div class="table-card-head">
+                Pending Deletion Requests
+                <span class="badge badge-video" style="margin-left:8px;">@Model.Count</span>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Clip</th>
+                        <th>Comment</th>
+                        <th>Posted</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>@(c.User?.DisplayName ?? "—")</td>
+                            <td>
+                                <a asp-controller="Media" asp-action="Watch" asp-route-id="@c.MediaClipId"
+                                   style="color:var(--accent);">@(c.MediaClip?.Title ?? "—")</a>
+                            </td>
+                            <td style="max-width:320px;word-break:break-word;">@c.Content</td>
+                            <td>@c.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                            <td>
+                                <div class="action-row">
+                                    <form asp-action="ApproveDeleteComment" asp-route-id="@c.Id" method="post"
+                                          onsubmit="return confirm('Delete this comment permanently?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">Approve Delete</button>
+                                    </form>
+                                    <form asp-action="DismissDeleteRequest" asp-route-id="@c.Id" method="post">
+                                        <button type="submit" class="btn btn-sm btn-secondary">Dismiss</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

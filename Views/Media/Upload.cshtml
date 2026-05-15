@@ -61,19 +61,56 @@
                 </div>
 
                 <div class="record-card">
-                    <h3>🎙 Record Directly</h3>
-                    <video id="previewVideo" class="record-preview" autoplay muted playsinline></video>
-                    <div class="record-controls">
-                        <button type="button" id="startRecord" class="btn btn-secondary btn-sm">⏺ Start</button>
-                        <button type="button" id="stopRecord" class="btn btn-ghost btn-sm" disabled>⏹ Stop</button>
+                    <div class="rec-tabs">
+                        <button type="button" class="rec-tab active" data-target="camPanel">🎙 Camera</button>
+                        <button type="button" class="rec-tab" data-target="screenPanel">🖥 Screen</button>
                     </div>
-                    <div class="record-status">
-                        <span class="rec-dot" id="recDot"></span>
-                        <span id="recordStatus">Idle — press Start to begin recording</span>
+
+                    {{-- Camera panel --}}
+                    <div id="camPanel" class="rec-panel">
+                        <video id="previewVideo" class="record-preview" autoplay muted playsinline></video>
+                        <div class="record-controls">
+                            <button type="button" id="startRecord" class="btn btn-secondary btn-sm">⏺ Start</button>
+                            <button type="button" id="stopRecord" class="btn btn-ghost btn-sm" disabled>⏹ Stop</button>
+                        </div>
+                        <div class="record-status">
+                            <span class="rec-dot" id="recDot"></span>
+                            <span id="recordStatus">Idle — press Start to begin recording</span>
+                        </div>
+                        <p id="noRecorderMsg" class="form-hint" style="display:none;color:#f59e0b;">
+                            ⚠ Your browser doesn't support in-browser recording. Please upload a file instead.
+                        </p>
                     </div>
-                    <p id="noRecorderMsg" class="form-hint" style="display:none;color:#f59e0b;">
-                        ⚠ Your browser doesn't support in-browser recording. Please upload a file instead.
-                    </p>
+
+                    {{-- Screen record panel --}}
+                    <div id="screenPanel" class="rec-panel" style="display:none">
+                        <div class="screen-preview-wrap">
+                            <video id="screenPreview" class="record-preview" autoplay muted playsinline></video>
+                            <canvas id="cropOverlay" class="crop-overlay"></canvas>
+                        </div>
+                        <p class="form-hint" style="margin-bottom:10px;">
+                            After selecting a screen, drag on the preview to set a recording region — or leave blank to record the full area.
+                        </p>
+                        <div class="screen-options">
+                            <label class="form-check">
+                                <input type="checkbox" id="includeMic" checked />
+                                <span class="form-check-label">Include microphone audio</span>
+                            </label>
+                            <button type="button" id="clearCrop" class="btn btn-ghost btn-sm" style="display:none;">✕ Clear region</button>
+                        </div>
+                        <div class="record-controls" style="margin-top:10px;">
+                            <button type="button" id="selectScreen" class="btn btn-secondary btn-sm">🖥 Select Screen</button>
+                            <button type="button" id="startScreenRec" class="btn btn-secondary btn-sm" disabled>⏺ Start</button>
+                            <button type="button" id="stopScreenRec" class="btn btn-ghost btn-sm" disabled>⏹ Stop</button>
+                        </div>
+                        <div class="record-status" style="margin-top:8px;">
+                            <span class="rec-dot" id="screenDot"></span>
+                            <span id="screenStatus">Click "Select Screen" to choose what to capture</span>
+                        </div>
+                        <p id="noScreenMsg" class="form-hint" style="display:none;color:#f59e0b;">
+                            ⚠ Screen capture is not supported in this browser.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -184,6 +221,17 @@
         });
 
         xhr.send(data);
+    });
+
+    // ── Record tab switching ─────────────────────────
+    document.querySelectorAll('.rec-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.rec-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const target = btn.dataset.target;
+            document.querySelectorAll('.rec-panel').forEach(p => p.style.display = 'none');
+            document.getElementById(target).style.display = 'block';
+        });
     });
 })();
 </script>

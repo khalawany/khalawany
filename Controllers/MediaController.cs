@@ -135,4 +135,104 @@ public class MediaController : Controller
 
         return RedirectToAction(nameof(MyClips));
     }
+
+    // ── Watch ──────────────────────────────────────────────────────────────
+
+    public async Task<IActionResult> Watch(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var clip = await _db.MediaClips
+            .Include(c => c.Owner)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (clip is null || clip.IsBlocked) return NotFound();
+
+        // Only owner or shared clips are visible
+        if (clip.OwnerId != userId && !clip.IsShared) return NotFound();
+
+        var comments = await _db.Comments
+            .Include(c => c.User)
+            .Where(c => c.MediaClipId == id && !c.IsDeleted)
+            .OrderBy(c => c.CreatedAtUtc)
+            .ToListAsync();
+
+        var likeCount = await _db.Likes.CountAsync(l => l.MediaClipId == id);
+        var userHasLiked = await _db.Likes.AnyAsync(l => l.MediaClipId == id && l.UserId == userId);
+
+        var vm = new WatchViewModel
+        {
+            Clip = clip,
+            Comments = comments,
+            LikeCount = likeCount,
+            UserHasLiked = userHasLiked,
+            IsOwner = clip.OwnerId == userId
+        };
+
+        return View(vm);
+    }
+
+    // ── Like (AJAX) ────────────────────────────────────────────────────────
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleLike(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var clip = await _db.MediaClips.FindAsync(id);
+        if (clip is null || clip.IsBlocked) return NotFound();
+
+        var existing = await _db.Likes.FirstOrDefaultAsync(l => l.MediaClipId == id && l.UserId == userId);
+        bool liked;
+        if (existing is not null)
+        {
+            _db.Likes.Remove(existing);
+            liked = false;
+        }
+        else
+        {
+            _db.Likes.Add(new Like { MediaClipId = id, UserId = userId, CreatedAtUtc = DateTime.UtcNow });
+            liked = true;
+        }
+
+        await _db.SaveChangesAsync();
+        var count = await _db.Likes.CountAsync(l => l.MediaClipId == id);
+        return Json(new { liked, count });
+    }
+
+    // ── Comments ───────────────────────────────────────────────────────────
+
+    [HttpPost]
+    public async Task<IActionResult> AddComment(int id, string content)
+    {
+        if (string.IsNullOrWhiteSpace(content) || content.Length > 1000)
+            return RedirectToAction(nameof(Watch), new { id });
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var clip = await _db.MediaClips.FindAsync(id);
+        if (clip is null || clip.IsBlocked) return NotFound();
+        if (clip.OwnerId != userId && !clip.IsShared) return NotFound();
+
+        _db.Comments.Add(new Comment
+        {
+            MediaClipId = id,
+            UserId = userId,
+            Content = content.Trim(),
+            CreatedAtUtc = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Watch), new { id });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RequestCommentDelete(int commentId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var comment = await _db.Comments.FindAsync(commentId);
+        if (comment is null || comment.UserId != userId) return NotFound();
+
+        comment.IsDeleteRequested = true;
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Watch), new { id = comment.MediaClipId });
+    }
 }

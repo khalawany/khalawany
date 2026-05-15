@@ -94,6 +94,8 @@
                     <div class="media-card-actions">
                         @if (!clip.IsBlocked)
                         {
+                            <a asp-controller="Media" asp-action="Watch" asp-route-id="@clip.Id"
+                               class="btn btn-secondary btn-sm" style="flex:1;">💬 Watch</a>
                             <a asp-controller="Media" asp-action="Edit" asp-route-id="@clip.Id"
                                class="btn btn-secondary btn-sm" style="flex:1;">✏ Edit</a>
                         }

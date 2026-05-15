@@ -70,6 +70,10 @@
                             <span>@clip.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</span>
                         </div>
                     </div>
+                    <div class="media-card-actions">
+                        <a asp-controller="Media" asp-action="Watch" asp-route-id="@clip.Id"
+                           class="btn btn-secondary btn-sm" style="flex:1;">💬 Comments &amp; Likes</a>
+                    </div>
                 </div>
             }
         </div>

@@ -26,9 +26,10 @@ public class AdminController : Controller
 
     public async Task<IActionResult> Index()
     {
-        ViewBag.UsersCount  = await _db.Users.CountAsync();
-        ViewBag.ClipsCount  = await _db.MediaClips.CountAsync();
-        ViewBag.RecentClips = await _db.MediaClips
+        ViewBag.UsersCount           = await _db.Users.CountAsync();
+        ViewBag.ClipsCount           = await _db.MediaClips.CountAsync();
+        ViewBag.PendingComments      = await _db.Comments.CountAsync(c => c.IsDeleteRequested && !c.IsDeleted);
+        ViewBag.RecentClips          = await _db.MediaClips
             .Include(x => x.Owner)
             .OrderByDescending(x => x.CreatedAtUtc)
             .Take(20)
@@ -174,5 +175,56 @@ public class AdminController : Controller
             return RedirectToAction(nameof(UserDetail), new { id = ownerId });
 
         return RedirectToAction(nameof(Index));
+    }
+
+    // ── Comment moderation ─────────────────────────────────────────────────
+
+    public async Task<IActionResult> Comments()
+    {
+        var flagged = await _db.Comments
+            .Include(c => c.User)
+            .Include(c => c.MediaClip)
+            .Where(c => c.IsDeleteRequested && !c.IsDeleted)
+            .OrderBy(c => c.CreatedAtUtc)
+            .ToListAsync();
+
+        return View(flagged);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ApproveDeleteComment(int id)
+    {
+        var comment = await _db.Comments.FindAsync(id);
+        if (comment is null) return NotFound();
+
+        comment.IsDeleted = true;
+        comment.IsDeleteRequested = false;
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Comments));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DismissDeleteRequest(int id)
+    {
+        var comment = await _db.Comments.FindAsync(id);
+        if (comment is null) return NotFound();
+
+        comment.IsDeleteRequested = false;
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Comments));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteComment(int id)
+    {
+        var comment = await _db.Comments.FindAsync(id);
+        if (comment is null) return NotFound();
+
+        comment.IsDeleted = true;
+        await _db.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Comments));
     }
 }

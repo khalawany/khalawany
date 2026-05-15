@@ -1,0 +1,139 @@
+@model KhalawanyTube.ViewModels.WatchViewModel
+@{
+    var clip = Model.Clip;
+}
+
+<div class="container watch-container">
+
+    <!-- Media player -->
+    <div class="watch-player">
+        @if (clip.MediaType == "video")
+        {
+            <video src="@clip.FilePath" controls autoplay preload="auto" style="width:100%;border-radius:10px;background:#000;"></video>
+        }
+        else
+        {
+            <div class="watch-audio-wrap">
+                <div class="watch-audio-icon">🎵</div>
+                <audio src="@clip.FilePath" controls style="width:100%;margin-top:16px;"></audio>
+            </div>
+        }
+    </div>
+
+    <!-- Title + meta -->
+    <div class="watch-info">
+        <h1 class="watch-title">@clip.Title</h1>
+        <div class="watch-meta">
+            <span>@(clip.Owner?.DisplayName ?? "Family")</span>
+            <span>·</span>
+            <span>@clip.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy · h:mm tt")</span>
+            @if (clip.IsShared)
+            {
+                <span class="badge badge-shared" style="margin-left:6px;">shared</span>
+            }
+        </div>
+        @if (!string.IsNullOrWhiteSpace(clip.Description))
+        {
+            <p class="watch-desc">@clip.Description</p>
+        }
+    </div>
+
+    <!-- Like bar -->
+    <div class="watch-like-bar">
+        <button id="likeBtn" class="btn @(Model.UserHasLiked ? "btn-liked" : "btn-ghost") btn-sm"
+                data-clip-id="@clip.Id"
+                data-liked="@Model.UserHasLiked.ToString().ToLower()">
+            <span class="like-icon">@(Model.UserHasLiked ? "♥" : "♡")</span>
+            <span id="likeCount">@Model.LikeCount</span>
+            <span>@(Model.LikeCount == 1 ? "Like" : "Likes")</span>
+        </button>
+        @if (Model.IsOwner)
+        {
+            <span class="watch-owner-badge">Your clip</span>
+        }
+    </div>
+
+    <!-- Comments section -->
+    <div class="watch-comments">
+        <h2 class="watch-comments-head">Comments <span class="comments-count">(@Model.Comments.Count)</span></h2>
+
+        <!-- Add comment form -->
+        <form asp-controller="Media" asp-action="AddComment" asp-route-id="@clip.Id" method="post" class="comment-form">
+            <textarea name="content" class="comment-input" placeholder="Write a comment…" maxlength="1000" rows="2" required></textarea>
+            <button type="submit" class="btn btn-primary btn-sm">Post</button>
+        </form>
+
+        @if (!Model.Comments.Any())
+        {
+            <div class="comments-empty">No comments yet. Be the first!</div>
+        }
+        else
+        {
+            <div class="comment-list">
+                @foreach (var c in Model.Comments)
+                {
+                    var isMyComment = c.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    <div class="comment-item @(c.IsDeleteRequested ? "comment-pending" : "")">
+                        <div class="comment-avatar">@((c.User?.DisplayName ?? "?")[0].ToString().ToUpper())</div>
+                        <div class="comment-body">
+                            <div class="comment-author">
+                                @(c.User?.DisplayName ?? "Family")
+                                <span class="comment-date">· @c.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</span>
+                                @if (c.IsDeleteRequested)
+                                {
+                                    <span class="status-badge status-blocked" style="margin-left:6px;font-size:0.7rem;">Pending deletion</span>
+                                }
+                            </div>
+                            <div class="comment-content">@c.Content</div>
+                            @if (isMyComment && !c.IsDeleteRequested)
+                            {
+                                <form asp-controller="Media" asp-action="RequestCommentDelete" asp-route-commentId="@c.Id"
+                                      method="post" style="display:inline;"
+                                      onsubmit="return confirm('Request deletion of your comment?');">
+                                    <button type="submit" class="btn-link-danger">Request delete</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+(function () {
+    const btn = document.getElementById('likeBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        const clipId = btn.dataset.clipId;
+        const res = await fetch('/familytube/Media/ToggleLike/' + clipId, {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': getCsrfToken() }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('likeCount').textContent = data.count;
+        btn.querySelector('.like-icon').textContent = data.liked ? '♥' : '♡';
+        btn.dataset.liked = data.liked;
+        btn.classList.toggle('btn-liked', data.liked);
+        btn.classList.toggle('btn-ghost', !data.liked);
+
+        // update label
+        const spans = btn.querySelectorAll('span');
+        spans[2].textContent = data.count === 1 ? 'Like' : 'Likes';
+    });
+
+    function getCsrfToken() {
+        const el = document.querySelector('input[name="__RequestVerificationToken"]');
+        return el ? el.value : '';
+    }
+})();
+</script>
+
+<!-- hidden CSRF token for AJAX -->
+<form style="display:none;">
+    @Html.AntiForgeryToken()
+</form>

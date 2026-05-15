@@ -42,6 +42,32 @@ using (var scope = app.Services.CreateScope())
     try { db.Database.ExecuteSqlRaw("ALTER TABLE AspNetUsers ADD COLUMN IsBlocked INTEGER NOT NULL DEFAULT 0"); }
     catch { /* column already exists */ }
 
+    db.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS Likes (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            MediaClipId INTEGER NOT NULL,
+            UserId TEXT NOT NULL,
+            CreatedAtUtc TEXT NOT NULL DEFAULT '',
+            UNIQUE(MediaClipId, UserId),
+            FOREIGN KEY(MediaClipId) REFERENCES MediaClips(Id) ON DELETE CASCADE,
+            FOREIGN KEY(UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+        )
+        """);
+
+    db.Database.ExecuteSqlRaw("""
+        CREATE TABLE IF NOT EXISTS Comments (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            MediaClipId INTEGER NOT NULL,
+            UserId TEXT NOT NULL,
+            Content TEXT NOT NULL DEFAULT '',
+            CreatedAtUtc TEXT NOT NULL DEFAULT '',
+            IsDeleteRequested INTEGER NOT NULL DEFAULT 0,
+            IsDeleted INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY(MediaClipId) REFERENCES MediaClips(Id) ON DELETE CASCADE,
+            FOREIGN KEY(UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+        )
+        """);
+
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     if (!await roleManager.RoleExistsAsync("Admin"))
     {

@@ -11,4 +11,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<MediaClip> MediaClips => Set<MediaClip>();
+    public DbSet<Like> Likes => Set<Like>();
+    public DbSet<Comment> Comments => Set<Comment>();
 }

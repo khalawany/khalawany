@@ -8,7 +8,16 @@
             <h1>Admin Dashboard</h1>
             <p>Overview of your family's KhalawanyTube instance.</p>
         </div>
-        <a asp-action="Users" class="btn btn-secondary">👥 Manage Users</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a asp-action="Users" class="btn btn-secondary">👥 Manage Users</a>
+            <a asp-action="Comments" class="btn @(ViewBag.PendingComments > 0 ? "btn-warn" : "btn-secondary")">
+                💬 Comments
+                @if (ViewBag.PendingComments > 0)
+                {
+                    <span style="margin-left:4px;background:var(--danger);color:#fff;border-radius:9999px;padding:1px 7px;font-size:0.75rem;">@ViewBag.PendingComments</span>
+                }
+            </a>
+        </div>
     </div>
 
     <div class="stats-grid">
@@ -19,6 +28,10 @@
         <div class="stat-card">
             <div class="stat-value">@ViewBag.ClipsCount</div>
             <div class="stat-label">Total Clips</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="@(ViewBag.PendingComments > 0 ? "color:var(--warn);" : "")">@ViewBag.PendingComments</div>
+            <div class="stat-label">Pending Comment Deletions</div>
         </div>
         <div class="stat-card">
             <div class="stat-value">@(recent.Count(c => c.IsShared))</div>
